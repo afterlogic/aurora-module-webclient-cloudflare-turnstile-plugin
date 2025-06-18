@@ -63,17 +63,20 @@ CMainView.prototype.showTurnstile = function ()
 	if (window.turnstile) {
 		if (!this.bShown) {
 			var
-				sKey = Settings ? Settings.SiteKey : ''
+				sKey = Settings ? Settings.SiteKey : '',
+				container = $("#turnstile-container")
 			;
 
 			if (sKey === '') {
 				sKey = "wrong-key";
 			}
 
-			this.widgetId = window.turnstile.render('#turnstile-container', {
-				sitekey: sKey,
-				size: 'flexible'
-			});
+			if (container.length) {
+				this.widgetId = window.turnstile.render(container.get(0), {
+					sitekey: sKey,
+					size: 'flexible'
+				});
+			}
 		} else {
 			window.turnstile.reset(this.widgetId);
 		}

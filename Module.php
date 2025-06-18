@@ -32,9 +32,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         \Aurora\System\EventEmitter::getInstance()->onAny(
             [
                 ['MailLoginFormWebclient::Login::before', [$this, 'onBeforeMailLoginFormWebclientLogin']],
-                ['StandardRegisterFormWebclient::Register::before', [$this, 'onBeforeStandardRegisterFormWebclientRegister']],
-                ['StandardLoginFormWebclient::Login::before', [$this, 'onBeforeStandardLoginFormWebclient'], 90],
-                ['MailSignup::Signup::before', [$this, 'onSignup'], 90],
+                ['StandardRegisterFormWebclient::Register::before', [$this, 'onBeforeRegister']],
+                ['StandardLoginFormWebclient::Login::before', [$this, 'onBeforeLogin'], 90],
+                ['Signup::before', [$this, 'onSignup'], 90],
                 ['Core::Login::after', [$this, 'onAfterLogin']]
             ]
         );
@@ -194,7 +194,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
     }
 
-    public function onBeforeStandardRegisterFormWebclientRegister($aArgs, &$mResult, &$mSubscriptionResult)
+    public function onBeforeRegister($aArgs, &$mResult, &$mSubscriptionResult)
     {
         if ($this->isTurnstileEnabledForIP()) {
             $this->memorizeToken($aArgs);
@@ -214,7 +214,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $this->memorizeToken($aArgs);
     }
 
-    public function onBeforeStandardLoginFormWebclient($aArgs, &$mResult, &$mSubscriptionResult)
+    public function onBeforeLogin($aArgs, &$mResult, &$mSubscriptionResult)
     {
         if ($this->needToCheckTurnstileOnLogin()) {
             $this->memorizeToken($aArgs);
