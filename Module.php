@@ -114,10 +114,17 @@ class Module extends \Aurora\System\Module\AbstractModule
         return json_decode($response, true);
     }
 
-    protected function checkIfTokenError()
+    /**
+     * checkIfTokenError
+     * @param array $aArgs
+     * @return array{Error: array{Code: int, ModuleName: string, Override: bool}|bool}
+     */
+    protected function checkIfTokenError($aArgs)
     {
+        $login = isset($aArgs['Login']) ? $aArgs['Login'] : '';
+
         if ($this->token === null) {
-           $this->log('Turnstile error: no token');
+           $this->log('Turnstile error: no token - ' . $login);
             return [
                 'Error' => [
                     'Code' => Enums\ErrorCodes::CloudflareTurnstileVerificationError,
@@ -129,7 +136,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         $responseKeys = $this->validateToken($this->token);
         if (!$responseKeys["success"]) {
-            $this->log('Turnstile error: ' . implode(', ', $responseKeys["error-codes"]));
+            $this->log('Turnstile error: ' . implode(', ', $responseKeys["error-codes"]) . ' - ' . $login);
             return [
                 'Error' => [
                     'Code' => Enums\ErrorCodes::CloudflareTurnstileUnknownError,
@@ -199,7 +206,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         if ($this->isTurnstileEnabledForIP()) {
             $this->memorizeToken($aArgs);
 
-            $mSubscriptionResult = $this->checkIfTokenError();
+            $mSubscriptionResult = $this->checkIfTokenError($aArgs);
             if (!empty($mSubscriptionResult)) {
                 // The result contains an error -> stop executing the Register method
                 return true;
@@ -219,7 +226,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         if ($this->needToCheckTurnstileOnLogin()) {
             $this->memorizeToken($aArgs);
 
-            $mSubscriptionResult = $this->checkIfTokenError();
+            $mSubscriptionResult = $this->checkIfTokenError($aArgs);
             if (!empty($mSubscriptionResult)) {
                 // The result contains an error -> stop executing the Login method
                 return true;
@@ -234,7 +241,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         if ($this->isTurnstileEnabledForIP()) {
             $this->memorizeToken($aArgs);
 
-            $mSubscriptionResult = $this->checkIfTokenError();
+            $mSubscriptionResult = $this->checkIfTokenError($aArgs);
             if (!empty($mSubscriptionResult)) {
                 // The result contains an error -> stop executing the Register method
                 return true;
