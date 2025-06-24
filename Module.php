@@ -116,7 +116,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     protected function checkIfTokenError()
     {
-        // if ($this->token === null) {
+        if ($this->token === null) {
            $this->log('Turnstile error: no token');
             return [
                 'Error' => [
@@ -125,7 +125,7 @@ class Module extends \Aurora\System\Module\AbstractModule
                     'Override' => true
                 ]
             ];
-        // }
+        }
 
         $responseKeys = $this->validateToken($this->token);
         if (!$responseKeys["success"]) {
