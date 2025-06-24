@@ -24,10 +24,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     public function init()
     {
-        // $this->aErrors = [
-        //     Enums\ErrorCodes::RecaptchaVerificationError	=> $this->i18N('ERROR_RECAPTCHA_VERIFICATION_DID_NOT_COMPLETE'),
-        //     Enums\ErrorCodes::RecaptchaUnknownError		=> $this->i18N('ERROR_UNKNOWN_RECAPTCHA_ERROR'),
-        // ];
+        $this->aErrors = [
+            Enums\ErrorCodes::CloudflareTurnstileVerificationError	=> $this->i18N('ERROR_CLOUDFARE_TURNSTILE_VERIFICATION_DID_NOT_COMPLETE'),
+            Enums\ErrorCodes::CloudflareTurnstileUnknownError		=> $this->i18N('ERROR_UNKNOWN_CLOUDFARE_TURNSTILE_ERROR'),
+        ];
 
         \Aurora\System\EventEmitter::getInstance()->onAny(
             [
@@ -116,23 +116,23 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     protected function checkIfTokenError()
     {
-        if ($this->token === null) {
+        // if ($this->token === null) {
            $this->log('Turnstile error: no token');
             return [
                 'Error' => [
-                    'Code' => 'VerificationError',
+                    'Code' => Enums\ErrorCodes::CloudflareTurnstileVerificationError,
                     'ModuleName' => $this->GetName(),
                     'Override' => true
                 ]
             ];
-        }
+        // }
 
         $responseKeys = $this->validateToken($this->token);
         if (!$responseKeys["success"]) {
             $this->log('Turnstile error: ' . implode(', ', $responseKeys["error-codes"]));
             return [
                 'Error' => [
-                    'Code' => 'UnknownError',
+                    'Code' => Enums\ErrorCodes::CloudflareTurnstileUnknownError,
                     'ModuleName' => $this->GetName(),
                     'Override' => true
                 ]
