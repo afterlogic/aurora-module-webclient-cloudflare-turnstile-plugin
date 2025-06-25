@@ -88,7 +88,15 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     protected function isTurnstileEnabledForIP()
     {
-        return !in_array(\Aurora\System\Utils::getClientIp(), $this->oModuleSettings->WhitelistIPs);
+        $ClientIP = \Aurora\System\Utils::getClientIp();
+        $IPwhitelisted = false;
+        foreach ($this->oModuleSettings->WhitelistIPs as $WhitelistIP) {
+            if ($this->cidr_match($ClientIP, $WhitelistIP)) {
+                $IPwhitelisted = true;
+                break;
+            }
+        }
+        return !$IPwhitelisted;
     }
 
     protected function memorizeToken($aArgs)
@@ -255,5 +263,18 @@ class Module extends \Aurora\System\Module\AbstractModule
         if (!(is_array($mResult) && isset($mResult[\Aurora\System\Application::AUTH_TOKEN_KEY]))) {
             $this->incrementAuthErrorCount();
         }
+    }
+
+    protected function cidr_match($ip, $range)
+    {
+        list ($subnet, $bits) = explode('/', $range);
+        if ($bits === null) {
+            $bits = 32;
+        }
+        $ip = ip2long($ip);
+        $subnet = ip2long($subnet);
+        $mask = -1 << (32 - $bits);
+        $subnet &= $mask;
+        return ($ip & $mask) == $subnet;
     }
 }
