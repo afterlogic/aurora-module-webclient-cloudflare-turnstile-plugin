@@ -92,6 +92,7 @@ CMainView.prototype.getParametersForSubmit = function ()
 
 	if (window.turnstile) {
 		oResult[Settings.ModuleName + "Token"] = window.turnstile.getResponse(this.widgetId);
+		window.turnstile.reset(this.widgetId);
 	}
 	return oResult;
 };
