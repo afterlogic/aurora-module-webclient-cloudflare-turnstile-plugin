@@ -13,7 +13,6 @@ use Aurora\System\SettingsProperty;
  * @property bool $Disabled
  * @property string $SiteKey
  * @property string $SecretKey
- * @property int $LimitCount
  * @property array $WhitelistIPs
  * @property bool $IncludeInMobile
  * @property bool $IncludeInDesktop
@@ -42,12 +41,6 @@ class Settings extends \Aurora\System\Module\Settings
                 "string",
                 null,
                 "Secret key obtained at Cloudflare Turnstile website",
-            ),
-            "LimitCount" => new SettingsProperty(
-                0,
-                "int",
-                null,
-                "Denotes number of unsuccessful login attempts required for CAPTCHA to be displayed, 0 - always displayed",
             ),
             "WhitelistIPs" => new SettingsProperty(
                 [],

@@ -9,7 +9,6 @@ var
 module.exports = {
 	ModuleName: 'CloudflareTurnstileWebclientPlugin',
 	SiteKey: '',
-	LimitCount: 0,
 	ShowTurnstile: true,
 
 	/**
@@ -24,7 +23,6 @@ module.exports = {
 		if (!_.isEmpty(oAppDataSection))
 		{
 			this.SiteKey = Types.pString(oAppDataSection.SiteKey, this.SiteKey);
-			this.LimitCount = Types.pInt(oAppDataSection.LimitCount, this.LimitCount);
 			this.ShowTurnstile = Types.pBool(oAppDataSection.ShowTurnstile, this.ShowTurnstile);
 		}
 	}

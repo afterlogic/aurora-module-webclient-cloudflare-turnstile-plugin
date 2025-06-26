@@ -12,37 +12,12 @@ var
 
 /**
  * @param {string} sModuleName
- * @param {boolean} bUseLimitCount
  * @constructor
  */
-function CMainView(sModuleName, bUseLimitCount)
+function CMainView(sModuleName)
 {
 	this.sModuleName = sModuleName;
 	this.bShown = false;
-	this.iAuthErrorCount = ko.observable(0);
-	this.bShowTurnstile = ko.observable(true);
-
-	if (bUseLimitCount) {
-		this.iAuthErrorCount($.cookie('auth-error') || 0);
-		this.iLimitCount = Settings ? Settings.LimitCount : 0;
-		//If the user has exceeded the number of authentication attempts - turnstile will be shown 
-		if (this.iAuthErrorCount() < this.iLimitCount) {
-			this.bShowTurnstile(false);
-		}
-		App.subscribeEvent('ReceiveAjaxResponse::after', _.bind(function (oParams) {
-			if ((oParams.Request.Module === 'StandardLoginFormWebclient' || oParams.Request.Module === 'MailLoginFormWebclient')
-				&& oParams.Request.Method === 'Login'
-				&& oParams.Response.Result === false) {
-				//In case of unsuccessful authentication the counter of unsuccessful attempts will be updated.
-				this.iAuthErrorCount($.cookie('auth-error') || 0);
-				if (this.iAuthErrorCount() >= this.iLimitCount) {
-					if (!this.bShowTurnstile()) {
-						this.bShowTurnstile(true);
-					}
-				}
-			}
-		}, this));
-	}
 
 	App.subscribeEvent('AnonymousUserForm::PopulateFormSubmitParameters', _.bind(function (oParams) {
 		if (oParams.Module === sModuleName && oParams.Parameters) {

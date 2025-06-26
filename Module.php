@@ -35,7 +35,6 @@ class Module extends \Aurora\System\Module\AbstractModule
                 ['StandardRegisterFormWebclient::Register::before', [$this, 'onBeforeRegister']],
                 ['StandardLoginFormWebclient::Login::before', [$this, 'onBeforeLogin'], 90],
                 ['Signup::before', [$this, 'onSignup'], 90],
-                ['Core::Login::after', [$this, 'onAfterLogin']]
             ]
         );
 
@@ -81,7 +80,6 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         return [
             'SiteKey' => $this->oModuleSettings->SiteKey,
-            'LimitCount' => $this->oModuleSettings->LimitCount,
             'ShowTurnstile' => $this->isTurnstileEnabledForIP(),
         ];
     }
@@ -167,37 +165,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             return false;
         }
 
-        $authErrorCount = isset($_COOKIE['auth-error']) ? (int) $_COOKIE['auth-error'] : 0;
-        // If the user has exceeded the number of authentication attempts
-        if ($authErrorCount >= $this->oModuleSettings->LimitCount) {
-            return true;
-        }
-
-        return false;
-    }
-
-    protected function clearAuthErrorCount()
-    {
-        //If the user is authenticated, reset the counter for unsuccessful attempts.
-        if (isset($_COOKIE['auth-error'])) {
-            \Aurora\System\Api::setCookie(
-                'auth-error',
-                0,
-                \strtotime('+1 hour'),
-                false
-            );
-        }
-    }
-
-    protected function incrementAuthErrorCount()
-    {
-        $iAuthErrorCount = isset($_COOKIE['auth-error']) ? ((int) $_COOKIE['auth-error'] + 1) : 1;
-        \Aurora\System\Api::setCookie(
-            'auth-error',
-            $iAuthErrorCount,
-            \strtotime('+1 hour'),
-            false
-        );
+        return true;
     }
 
     protected function log($text)
@@ -239,8 +207,6 @@ class Module extends \Aurora\System\Module\AbstractModule
                 // The result contains an error -> stop executing the Login method
                 return true;
             }
-
-            $this->clearAuthErrorCount();
         }
     }
 
@@ -254,14 +220,6 @@ class Module extends \Aurora\System\Module\AbstractModule
                 // The result contains an error -> stop executing the Register method
                 return true;
             }
-        }
-    }
-
-    public function onAfterLogin($aArgs, &$mResult)
-    {
-        // if authentication has failed, increment auth-error counter
-        if (!(is_array($mResult) && isset($mResult[\Aurora\System\Application::AUTH_TOKEN_KEY]))) {
-            $this->incrementAuthErrorCount();
         }
     }
 
