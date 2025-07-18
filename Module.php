@@ -31,10 +31,11 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         \Aurora\System\EventEmitter::getInstance()->onAny(
             [
-                ['MailLoginFormWebclient::Login::before', [$this, 'onBeforeMailLoginFormWebclientLogin']],
                 ['StandardRegisterFormWebclient::Register::before', [$this, 'onBeforeRegister']],
-                ['StandardLoginFormWebclient::Login::before', [$this, 'onBeforeLogin'], 90],
                 ['Signup::before', [$this, 'onSignup'], 90],
+
+                ['Login::before', [$this, 'onBeforeAnyLogin']],
+                ['Core::Login::before', [$this, 'onBeforeLogin'], 90],
             ]
         );
 
@@ -192,7 +193,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
     }
 
-    public function onBeforeMailLoginFormWebclientLogin($aArgs, &$mResult, &$mSubscriptionResult)
+    public function onBeforeAnyLogin($aArgs, &$mResult, &$mSubscriptionResult)
     {
         $this->memorizeToken($aArgs);
     }
