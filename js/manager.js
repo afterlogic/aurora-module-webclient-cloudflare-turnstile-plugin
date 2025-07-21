@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function (oAppData) {
-	var
+	const
 		_ = require('underscore'),
 		
 		App = require('%PathToCoreWebclientModule%/js/App.js'),
@@ -9,7 +9,7 @@ module.exports = function (oAppData) {
 		Settings = require('modules/%ModuleName%/js/Settings.js')
 	;
 
-	Settings.init(oAppData);
+	Settings.init(oAppData)
 
 	if (App.getUserRole() === Enums.UserRole.Anonymous)
 	{
@@ -18,20 +18,16 @@ module.exports = function (oAppData) {
 			{
 				if (Settings.ShowTurnstile)
 				{
-					var CMainView = require('modules/%ModuleName%/js/views/CMainView.js');
+					var CMainView = require('modules/%ModuleName%/js/views/CMainView.js')
 					App.subscribeEvent('AnonymousUserForm::PopulateBeforeButtonsControllers', _.bind(function (oParams) {
 						if (_.isFunction(oParams.RegisterBeforeButtonsController))
 						{
-							const usingLimitCountModules = ['StandardLoginFormWebclient', 'MailLoginFormWebclient'];
-							oParams.RegisterBeforeButtonsController(new CMainView(
-								oParams.ModuleName,
-								usingLimitCountModules.includes(oParams.ModuleName)
-							));
+							oParams.RegisterBeforeButtonsController(new CMainView(oParams.ModuleName))
 						}
-					}, this));
+					}, this))
 				}
 			}
-		};
+		}
 	}
-	return null;
-};
+	return null
+}

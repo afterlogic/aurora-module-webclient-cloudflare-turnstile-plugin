@@ -16,62 +16,60 @@ var
  */
 function CMainView(sModuleName)
 {
-	this.sModuleName = sModuleName;
-	this.bShown = false;
+	this.sModuleName = sModuleName
+	this.widgetId = null
+	this.$containerDom = ko.observable(null)
 
 	App.subscribeEvent('AnonymousUserForm::PopulateFormSubmitParameters', _.bind(function (oParams) {
 		if (oParams.Module === sModuleName && oParams.Parameters) {
-			var aParams = this.getParametersForSubmit();
-			_.extend(oParams.Parameters, aParams);
+			var aParams = this.getParametersForSubmit()
+			_.extend(oParams.Parameters, aParams)
 		}
-	}, this));
+	}, this))
 
 	if (!window.turnstile) {
-		$.getScript('https://challenges.cloudflare.com/turnstile/v0/api.js', this.showTurnstile);
+		$.getScript('https://challenges.cloudflare.com/turnstile/v0/api.js', _.bind(this.showTurnstile, this))
 	} else {
-		this.showTurnstile();
+		this.showTurnstile()
 	}
+
+	this.$containerDom.subscribe(function () {
+		this.showTurnstile()
+	}, this)
 }
 
 CMainView.prototype.showTurnstile = function ()
 {
 	if (window.turnstile) {
-		if (!this.bShown) {
+		if (this.widgetId === null) {
 			var
 				sKey = Settings ? Settings.SiteKey : '',
-				container = $("#turnstile-container")
+				container = this.$containerDom()
 			;
 
-			if (sKey === '') {
-				sKey = "wrong-key";
-			}
-
-			if (container.length) {
-				this.widgetId = window.turnstile.render(container.get(0), {
+			if (container && container.length) {
+				this.widgetId = window.turnstile.render(container[0], {
 					sitekey: sKey,
 					size: 'flexible'
-				});
+				})
 			}
 		} else {
-			window.turnstile.reset(this.widgetId);
+			window.turnstile.reset(this.widgetId)
 		}
-		this.bShown = true;
 	}
-};
+}
 
 CMainView.prototype.getParametersForSubmit = function ()
 {
-	var
-		oResult = {}
-	;
+	const oResult = {}
 
 	if (window.turnstile) {
-		oResult[Settings.ModuleName + "Token"] = window.turnstile.getResponse(this.widgetId);
-		window.turnstile.reset(this.widgetId);
+		oResult[Settings.ModuleName + "Token"] = window.turnstile.getResponse(this.widgetId)
+		window.turnstile.reset(this.widgetId)
 	}
-	return oResult;
-};
+	return oResult
+}
 
-CMainView.prototype.ViewTemplate = '%ModuleName%_MainView';
+CMainView.prototype.ViewTemplate = '%ModuleName%_MainView'
 
-module.exports = CMainView;
+module.exports = CMainView
