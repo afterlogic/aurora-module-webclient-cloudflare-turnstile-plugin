@@ -18,29 +18,13 @@ namespace Aurora\Modules\CloudflareTurnstileWebclientPlugin;
  */
 class Module extends \Aurora\System\Module\AbstractModule
 {
-    protected $token = null;
+    public $tokenName = 'CloudflareTurnstileWebclientPluginToken';
+
+    protected $checkSuccessful = false;
 
     protected $allowCheckOnLogin = true;
 
-    public function init()
-    {
-        $this->aErrors = [
-            Enums\ErrorCodes::CloudflareTurnstileVerificationError	=> $this->i18N('ERROR_CLOUDFARE_TURNSTILE_VERIFICATION_DID_NOT_COMPLETE'),
-            Enums\ErrorCodes::CloudflareTurnstileUnknownError		=> $this->i18N('ERROR_UNKNOWN_CLOUDFARE_TURNSTILE_ERROR'),
-        ];
-
-        \Aurora\System\EventEmitter::getInstance()->onAny(
-            [
-                ['StandardRegisterFormWebclient::Register::before', [$this, 'onBeforeRegister']],
-                ['Signup::before', [$this, 'onSignup'], 90],
-
-                ['Login::before', [$this, 'onBeforeAnyLogin']],
-                ['Core::Login::before', [$this, 'onBeforeLogin'], 90],
-            ]
-        );
-
-        $this->subscribeEvent('AddToContentSecurityPolicyDefault', array($this, 'onAddToContentSecurityPolicyDefault'));
-    }
+    protected $allowCheckOnRegister = true;
 
     /**
      * @return Module
@@ -66,9 +50,30 @@ class Module extends \Aurora\System\Module\AbstractModule
         return $this->oModuleSettings;
     }
 
+    public function init()
+    {
+        $this->aErrors = [
+            Enums\ErrorCodes::CloudflareTurnstileVerificationError	=> $this->i18N('ERROR_CLOUDFARE_TURNSTILE_VERIFICATION_DID_NOT_COMPLETE'),
+            Enums\ErrorCodes::CloudflareTurnstileUnknownError		=> $this->i18N('ERROR_UNKNOWN_CLOUDFARE_TURNSTILE_ERROR'),
+        ];
+
+        if (!empty($this->oModuleSettings->SecretKey) && !empty($this->oModuleSettings->SiteKey)) {
+
+            \Aurora\System\EventEmitter::getInstance()->onAny(
+                [
+                    ['Register::before', [$this, 'onBeforeRegister']],
+                    ['Signup::before', [$this, 'onBeforeRegister']],
+                    ['Login::before', [$this, 'onBeforeLogin']],
+                ]
+            );
+
+            $this->subscribeEvent('AddToContentSecurityPolicyDefault', array($this, 'onAddToContentSecurityPolicyDefault'));
+        }
+    }
+
     public function onAddToContentSecurityPolicyDefault($aArgs, &$aAddDefault)
     {
-        $aAddDefault[] = 'www.google.com www.gstatic.com';
+        $aAddDefault[] = 'challenges.cloudflare.com';
     }
 
     /**
@@ -98,14 +103,12 @@ class Module extends \Aurora\System\Module\AbstractModule
         return !$IPwhitelisted;
     }
 
-    protected function memorizeToken($aArgs)
-    {
-        $tokenParamName = 'CloudflareTurnstileWebclientPluginToken';
-        if (isset($aArgs[$tokenParamName]) && !empty($aArgs[$tokenParamName])) {
-            $this->token = $aArgs[$tokenParamName];
-        }
-    }
-
+    /**
+     * Validates token on Cloudflare Turnstile service.
+     *
+     * @param string $token
+     * @return array{success: bool, 'error-codes': array<string>} The response from the Turnstile service.
+     */
     protected function validateToken($token)
     {
         $ch = curl_init("https://challenges.cloudflare.com/turnstile/v0/siteverify");
@@ -122,43 +125,78 @@ class Module extends \Aurora\System\Module\AbstractModule
     }
 
     /**
-     * checkIfTokenError
+     * Checks if the token exists and if the check has already been performed.
+     *
      * @param array $aArgs
-     * @return array{Error: array{Code: int, ModuleName: string, Override: bool}|bool}
+     * @return mixed false | array{Error: array{Code: int, ModuleName: string, Override: bool}|bool}
      */
     protected function checkIfTokenError($aArgs)
     {
-        $login = isset($aArgs['Login']) ? $aArgs['Login'] : '';
+        if (!$this->checkSuccessful) {
+            $login = isset($aArgs['Login']) ? $aArgs['Login'] : '';
 
-        if ($this->token === null) {
-           $this->log('Turnstile error: no token - ' . $login);
-            return [
-                'Error' => [
-                    'Code' => Enums\ErrorCodes::CloudflareTurnstileVerificationError,
-                    'ModuleName' => $this->GetName(),
-                    'Override' => true
-                ]
-            ];
-        }
+            if (empty($this->oModuleSettings->SecretKey)) {
+                $this->log('Turnstile error: not configured');
+                return [
+                    'Error' => [
+                        'Code' => Enums\ErrorCodes::CloudflareTurnstileVerificationError,
+                        'ModuleName' => $this->GetName(),
+                        'Override' => true
+                    ]
+                ];
+            }
 
-        $responseKeys = $this->validateToken($this->token);
-        if (!$responseKeys["success"]) {
-            $this->log('Turnstile error: ' . implode(', ', $responseKeys["error-codes"]) . ' - ' . $login);
-            return [
-                'Error' => [
-                    'Code' => Enums\ErrorCodes::CloudflareTurnstileUnknownError,
-                    'ModuleName' => $this->GetName(),
-                    'Override' => true
-                ]
-            ];
+            $token = null;
+            if (isset($aArgs[$this->tokenName]) && !empty($aArgs[$this->tokenName])) {
+                $token = $aArgs[$this->tokenName];
+            }
+
+            if ($token === null) {
+                $this->log('Turnstile error: no token - ' . $login);
+                return [
+                    'Error' => [
+                        'Code' => Enums\ErrorCodes::CloudflareTurnstileVerificationError,
+                        'ModuleName' => $this->GetName(),
+                        'Override' => true
+                    ]
+                ];
+            }
+
+            $responseKeys = $this->validateToken($token);
+
+            if ($responseKeys["success"]) {
+                $this->checkSuccessful = true;
+            } else {
+                $this->log('Turnstile error: ' . implode(', ', $responseKeys["error-codes"]) . ' - ' . $login);
+                return [
+                    'Error' => [
+                        'Code' => Enums\ErrorCodes::CloudflareTurnstileUnknownError,
+                        'ModuleName' => $this->GetName(),
+                        'Override' => true
+                    ]
+                ];
+            }
         }
 
         return false;
     }
 
-    protected function needToCheckTurnstileOnLogin()
+    protected function needToCheckOnLogin()
     {
         if (!$this->allowCheckOnLogin) {
+            return false;
+        }
+
+        if (!$this->isTurnstileEnabledForIP()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function needToCheckOnRegister()
+    {
+        if (!$this->allowCheckOnRegister) {
             return false;
         }
 
@@ -178,30 +216,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
     }
 
-    public function onBeforeRegister($aArgs, &$mResult, &$mSubscriptionResult)
-    {
-        if ($this->isTurnstileEnabledForIP()) {
-            $this->memorizeToken($aArgs);
-
-            $mSubscriptionResult = $this->checkIfTokenError($aArgs);
-            if (!empty($mSubscriptionResult)) {
-                // The result contains an error -> stop executing the Register method
-                return true;
-            }
-
-            $this->allowCheckOnLogin = false;
-        }
-    }
-
-    public function onBeforeAnyLogin($aArgs, &$mResult, &$mSubscriptionResult)
-    {
-        $this->memorizeToken($aArgs);
-    }
-
     public function onBeforeLogin($aArgs, &$mResult, &$mSubscriptionResult)
     {
-        if ($this->needToCheckTurnstileOnLogin()) {
-            $this->memorizeToken($aArgs);
+        if ($this->needToCheckOnLogin()) {
 
             $mSubscriptionResult = $this->checkIfTokenError($aArgs);
             if (!empty($mSubscriptionResult)) {
@@ -211,10 +228,9 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
     }
 
-    public function onSignup($aArgs, &$mResult, &$mSubscriptionResult)
+    public function onBeforeRegister($aArgs, &$mResult, &$mSubscriptionResult)
     {
-        if ($this->isTurnstileEnabledForIP()) {
-            $this->memorizeToken($aArgs);
+        if ($this->needToCheckOnRegister()) {
 
             $mSubscriptionResult = $this->checkIfTokenError($aArgs);
             if (!empty($mSubscriptionResult)) {
