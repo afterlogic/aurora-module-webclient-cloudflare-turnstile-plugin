@@ -14,7 +14,7 @@ var
  * @param {string} sModuleName
  * @constructor
  */
-function CMainView(sModuleName)
+function CTurnstileView(sModuleName)
 {
 	this.sModuleName = sModuleName
 	this.widgetId = null
@@ -38,7 +38,7 @@ function CMainView(sModuleName)
 	}, this)
 }
 
-CMainView.prototype.showTurnstile = function ()
+CTurnstileView.prototype.showTurnstile = function ()
 {
 	if (window.turnstile) {
 		if (this.widgetId === null) {
@@ -59,7 +59,7 @@ CMainView.prototype.showTurnstile = function ()
 	}
 }
 
-CMainView.prototype.getParametersForSubmit = function ()
+CTurnstileView.prototype.getParametersForSubmit = function ()
 {
 	const oResult = {}
 
@@ -70,6 +70,6 @@ CMainView.prototype.getParametersForSubmit = function ()
 	return oResult
 }
 
-CMainView.prototype.ViewTemplate = '%ModuleName%_MainView'
+CTurnstileView.prototype.ViewTemplate = '%ModuleName%_MainView'
 
-module.exports = CMainView
+module.exports = CTurnstileView

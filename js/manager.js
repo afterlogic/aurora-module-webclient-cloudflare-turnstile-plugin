@@ -18,11 +18,11 @@ module.exports = function (oAppData) {
 			{
 				if (Settings.ShowTurnstile)
 				{
-					var CMainView = require('modules/%ModuleName%/js/views/CMainView.js')
+					var CTurnstileView = require('modules/%ModuleName%/js/views/CTurnstileView.js')
 					App.subscribeEvent('AnonymousUserForm::PopulateBeforeButtonsControllers', _.bind(function (oParams) {
 						if (_.isFunction(oParams.RegisterBeforeButtonsController))
 						{
-							oParams.RegisterBeforeButtonsController(new CMainView(oParams.ModuleName))
+							oParams.RegisterBeforeButtonsController(new CTurnstileView(oParams.ModuleName))
 						}
 					}, this))
 				}
