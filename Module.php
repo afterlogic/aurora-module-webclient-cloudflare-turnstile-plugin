@@ -68,6 +68,8 @@ class Module extends \Aurora\System\Module\AbstractModule
             );
 
             $this->subscribeEvent('AddToContentSecurityPolicyDefault', array($this, 'onAddToContentSecurityPolicyDefault'));
+        } else {
+            $this->log('Cloudflare Turnstile is not configured properly. Please set SiteKey and SecretKey in module settings.');
         }
     }
 
@@ -134,17 +136,6 @@ class Module extends \Aurora\System\Module\AbstractModule
     {
         if (!$this->checkSuccessful) {
             $login = isset($aArgs['Login']) ? $aArgs['Login'] : '';
-
-            if (empty($this->oModuleSettings->SecretKey)) {
-                $this->log('Turnstile error: not configured');
-                return [
-                    'Error' => [
-                        'Code' => Enums\ErrorCodes::CloudflareTurnstileVerificationError,
-                        'ModuleName' => $this->GetName(),
-                        'Override' => true
-                    ]
-                ];
-            }
 
             $token = null;
             if (isset($aArgs[$this->tokenName]) && !empty($aArgs[$this->tokenName])) {
