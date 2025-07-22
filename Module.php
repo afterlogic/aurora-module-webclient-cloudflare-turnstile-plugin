@@ -97,7 +97,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         $ClientIP = \Aurora\System\Utils::getClientIp();
         $IPwhitelisted = false;
         foreach ($this->oModuleSettings->WhitelistIPs as $WhitelistIP) {
-            if ($this->cidr_match($ClientIP, $WhitelistIP)) {
+            if ($this->ipInSubnet($ClientIP, $WhitelistIP)) {
                 $IPwhitelisted = true;
                 break;
             }
@@ -231,16 +231,11 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
     }
 
-    protected function cidr_match($ip, $range)
+    protected function ipInSubnet($address, $range)
     {
-        list ($subnet, $bits) = explode('/', $range);
-        if ($bits === null) {
-            $bits = 32;
-        }
-        $ip = ip2long($ip);
-        $subnet = ip2long($subnet);
-        $mask = -1 << (32 - $bits);
-        $subnet &= $mask;
-        return ($ip & $mask) == $subnet;
+        $ip = \IPLib\Factory::parseAddressString($address);
+        $subnet = \IPLib\Range\Subnet::parseString($range);
+
+        return $ip && $subnet ? $subnet->contains($ip) : false;
     }
 }
