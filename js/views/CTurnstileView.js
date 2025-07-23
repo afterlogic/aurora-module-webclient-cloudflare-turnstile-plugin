@@ -20,10 +20,14 @@ function CTurnstileView(sModuleName)
 	this.widgetId = null
 	this.$containerDom = ko.observable(null)
 
-	App.subscribeEvent('AnonymousUserForm::PopulateFormSubmitParameters', _.bind(function (oParams) {
-		if (oParams.Module === sModuleName && oParams.Parameters) {
-			var aParams = this.getParametersForSubmit()
-			_.extend(oParams.Parameters, aParams)
+	App.subscribeEvent('AnonymousUserForm::PopulateFormSubmitParameters', _.bind(function (oData) {
+		if (oData.Module === sModuleName && oData.Parameters) {
+			var oParameters = this.getParametersForSubmit()
+			if (oParameters) {
+				_.extend(oData.Parameters, oParameters)
+			} else {
+				oData.Reject = true
+			}
 		}
 	}, this))
 
@@ -61,13 +65,21 @@ CTurnstileView.prototype.showTurnstile = function ()
 
 CTurnstileView.prototype.getParametersForSubmit = function ()
 {
-	const oResult = {}
+	let mResult = {}
 
 	if (window.turnstile) {
-		oResult[Settings.ModuleName + "Token"] = window.turnstile.getResponse(this.widgetId)
-		window.turnstile.reset(this.widgetId)
+		const token = window.turnstile.getResponse(this.widgetId)
+		
+		if (token) {
+			mResult[Settings.ModuleName + "Token"] = token
+			window.turnstile.reset(this.widgetId)
+			window.turnstile.execute(this.widgetId)
+		} else {
+			mResult = false
+		}
 	}
-	return oResult
+
+	return mResult
 }
 
 CTurnstileView.prototype.ViewTemplate = '%ModuleName%_MainView'
