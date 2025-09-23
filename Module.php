@@ -182,6 +182,10 @@ class Module extends \Aurora\System\Module\AbstractModule
             return false;
         }
 
+        if (\Aurora\System\Application::$mobileAppChecked) {
+            return false;
+        }
+
         return true;
     }
 
