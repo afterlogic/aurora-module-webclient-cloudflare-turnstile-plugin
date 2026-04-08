@@ -172,9 +172,13 @@ class Module extends \Aurora\System\Module\AbstractModule
         return false;
     }
 
-    protected function needToCheckOnLogin()
+    protected function needToCheckOnLogin($aArgs)
     {
         if (!$this->allowCheckOnLogin) {
+            return false;
+        }
+
+        if ($this->isAdminLogin($aArgs)) {
             return false;
         }
 
@@ -189,9 +193,13 @@ class Module extends \Aurora\System\Module\AbstractModule
         return true;
     }
 
-    protected function needToCheckOnRegister()
+    protected function needToCheckOnRegister($aArgs)
     {
         if (!$this->allowCheckOnRegister) {
+            return false;
+        }
+
+        if ($this->isAdminLogin($aArgs)) {
             return false;
         }
 
@@ -213,8 +221,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     public function onBeforeLogin($aArgs, &$mResult, &$mSubscriptionResult)
     {
-        if ($this->needToCheckOnLogin()) {
-
+        if ($this->needToCheckOnLogin($aArgs)) {
             $mSubscriptionResult = $this->checkIfTokenError($aArgs);
             if (!empty($mSubscriptionResult)) {
                 // The result contains an error -> stop executing the Login method
@@ -225,7 +232,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     public function onBeforeRegister($aArgs, &$mResult, &$mSubscriptionResult)
     {
-        if ($this->needToCheckOnRegister()) {
+        if ($this->needToCheckOnRegister($aArgs)) {
 
             $mSubscriptionResult = $this->checkIfTokenError($aArgs);
             if (!empty($mSubscriptionResult)) {
@@ -241,5 +248,12 @@ class Module extends \Aurora\System\Module\AbstractModule
         $subnet = \IPLib\Range\Subnet::parseString($range);
 
         return $ip && $subnet ? $subnet->contains($ip) : false;
+    }
+
+    protected function isAdminLogin($aArgs)
+    {
+        $oSettings = &\Aurora\System\Api::GetSettings();
+
+        return $aArgs['Login'] === $oSettings->AdminLogin;
     }
 }
