@@ -25,6 +25,16 @@ function CTurnstileView(sModuleName)
 			var oParameters = this.getParametersForSubmit()
 			if (oParameters) {
 				_.extend(oData.Parameters, oParameters)
+
+				const fFailedUnsubscribe = App.subscribeEventOnce('AnonymousUserForm::LoginFailed', _.bind(function () {
+					this.resetTurnstile();
+
+					fSucceedUnsubscribe();
+				}, this));
+
+				const fSucceedUnsubscribe = App.subscribeEventOnce('AnonymousUserForm::LoginSucceed', _.bind(function () {
+					fFailedUnsubscribe();
+				}, this));
 			} else {
 				oData.Reject = true
 			}
@@ -72,14 +82,20 @@ CTurnstileView.prototype.getParametersForSubmit = function ()
 		
 		if (token) {
 			mResult[Settings.ModuleName + "Token"] = token
-			window.turnstile.reset(this.widgetId)
-			window.turnstile.execute(this.widgetId)
 		} else {
 			mResult = false
 		}
 	}
 
 	return mResult
+}
+
+CTurnstileView.prototype.resetTurnstile = function ()
+{
+	if (typeof window.turnstile !== 'undefined' && this.widgetId != null) {
+		window.turnstile.reset(this.widgetId);
+		window.turnstile.execute(this.widgetId);
+	}
 }
 
 CTurnstileView.prototype.ViewTemplate = '%ModuleName%_MainView'
