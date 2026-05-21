@@ -21,7 +21,7 @@ function CTurnstileView(sModuleName)
 	this.$containerDom = ko.observable(null)
 
 	App.subscribeEvent('AnonymousUserForm::PopulateFormSubmitParameters', _.bind(function (oData) {
-		if (oData.Module === sModuleName && oData.Parameters) {
+		if (!!Settings.SiteKey && oData.Module === sModuleName && oData.Parameters) {
 			var oParameters = this.getParametersForSubmit()
 			if (oParameters) {
 				_.extend(oData.Parameters, oParameters)
@@ -41,10 +41,12 @@ function CTurnstileView(sModuleName)
 		}
 	}, this))
 
-	if (!window.turnstile) {
-		$.getScript('https://challenges.cloudflare.com/turnstile/v0/api.js', _.bind(this.showTurnstile, this))
-	} else {
-		this.showTurnstile()
+	if (Settings.SiteKey) {
+		if (!window.turnstile) {
+			$.getScript('https://challenges.cloudflare.com/turnstile/v0/api.js', _.bind(this.showTurnstile, this))
+		} else {
+			this.showTurnstile()
+		}
 	}
 
 	this.$containerDom.subscribe(function () {
@@ -57,7 +59,7 @@ CTurnstileView.prototype.showTurnstile = function ()
 	if (window.turnstile) {
 		if (this.widgetId === null) {
 			var
-				sKey = Settings ? Settings.SiteKey : '',
+				sKey = Settings.SiteKey,
 				container = this.$containerDom()
 			;
 

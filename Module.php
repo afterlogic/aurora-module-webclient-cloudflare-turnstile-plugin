@@ -57,7 +57,7 @@ class Module extends \Aurora\System\Module\AbstractModule
             Enums\ErrorCodes::CloudflareTurnstileUnknownError		=> $this->i18N('ERROR_UNKNOWN_CLOUDFARE_TURNSTILE_ERROR'),
         ];
 
-        if (!empty($this->oModuleSettings->SecretKey) && !empty($this->oModuleSettings->SiteKey)) {
+        if ($this->isTurnstileConfigured()) {
 
             \Aurora\System\EventEmitter::getInstance()->onAny(
                 [
@@ -69,7 +69,7 @@ class Module extends \Aurora\System\Module\AbstractModule
 
             $this->subscribeEvent('AddToContentSecurityPolicyDefault', array($this, 'onAddToContentSecurityPolicyDefault'));
         } else {
-            $this->log('Cloudflare Turnstile is not configured properly. Please set SiteKey and SecretKey in module settings.');
+            $this->log('Cloudflare Turnstile is not configured properly. Please set SiteKey and SecretKey in the module settings.');
         }
     }
 
@@ -88,8 +88,14 @@ class Module extends \Aurora\System\Module\AbstractModule
 
         return [
             'SiteKey' => $this->oModuleSettings->SiteKey,
-            'ShowTurnstile' => $this->isTurnstileEnabledForIP(),
+            'ShowTurnstile' => $this->isTurnstileConfigured() && $this->isTurnstileEnabledForIP(),
         ];
+    }
+
+    protected function isTurnstileConfigured()
+    {
+        return trim((string) $this->oModuleSettings->SiteKey) !== ''
+            && trim((string) $this->oModuleSettings->SecretKey) !== '';
     }
 
     protected function isTurnstileEnabledForIP()
@@ -174,6 +180,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     protected function needToCheckOnLogin($aArgs)
     {
+        if (!$this->isTurnstileConfigured()) {
+            return false;
+        }
+
         if (!$this->allowCheckOnLogin) {
             return false;
         }
@@ -195,6 +205,10 @@ class Module extends \Aurora\System\Module\AbstractModule
 
     protected function needToCheckOnRegister($aArgs)
     {
+        if (!$this->isTurnstileConfigured()) {
+            return false;
+        }
+
         if (!$this->allowCheckOnRegister) {
             return false;
         }

@@ -16,7 +16,7 @@ module.exports = function (oAppData) {
 		return {
 			start: function (ModulesManager)
 			{
-				if (Settings.ShowTurnstile)
+				if (Settings.ShowTurnstile && Settings.SiteKey)
 				{
 					var CTurnstileView = require('modules/%ModuleName%/js/views/CTurnstileView.js')
 					App.subscribeEvent('AnonymousUserForm::PopulateBeforeButtonsControllers', _.bind(function (oParams) {
