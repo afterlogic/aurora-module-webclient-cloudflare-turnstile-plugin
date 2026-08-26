@@ -5,7 +5,10 @@ import eventBus from 'src/event-bus'
 import settings from './settings'
 import turnstileApi from './turnstile-api'
 
-const LOGIN_MODULE_NAME = 'StandardLoginFormMobileWebclient'
+const LOGIN_MODULE_NAMES = [
+  'StandardLoginFormMobileWebclient',
+  'MailLoginFormMobileWebclient',
+]
 
 const _getBeforeButtonsComponents = (params) => {
   if (!settings.getSetting('showTurnstile') || !settings.getSetting('siteKey')) {
@@ -20,7 +23,7 @@ const _getBeforeButtonsComponents = (params) => {
 }
 
 const _populateFormSubmitParameters = (params) => {
-  if (params.Module !== LOGIN_MODULE_NAME || !params.Parameters) {
+  if (!LOGIN_MODULE_NAMES.includes(params.Module) || !params.Parameters) {
     return
   }
 
@@ -37,7 +40,7 @@ const _populateFormSubmitParameters = (params) => {
 }
 
 const _onLoginFailed = (params) => {
-  if (params.ModuleName === LOGIN_MODULE_NAME) {
+  if (LOGIN_MODULE_NAMES.includes(params.ModuleName)) {
     turnstileApi.reset()
   }
 }
@@ -52,8 +55,11 @@ export default {
   },
 
   initSubscriptions () {
-    eventBus.$off('StandardLoginFormMobileWebclient::GetBeforeButtonsComponents', _getBeforeButtonsComponents)
-    eventBus.$on('StandardLoginFormMobileWebclient::GetBeforeButtonsComponents', _getBeforeButtonsComponents)
+    LOGIN_MODULE_NAMES.forEach((moduleName) => {
+      const eventName = `${moduleName}::GetBeforeButtonsComponents`
+      eventBus.$off(eventName, _getBeforeButtonsComponents)
+      eventBus.$on(eventName, _getBeforeButtonsComponents)
+    })
 
     eventBus.$off('AnonymousUserForm::PopulateFormSubmitParameters', _populateFormSubmitParameters)
     eventBus.$on('AnonymousUserForm::PopulateFormSubmitParameters', _populateFormSubmitParameters)
