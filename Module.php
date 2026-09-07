@@ -35,14 +35,6 @@ class Module extends \Aurora\System\Module\AbstractModule
     }
 
     /**
-     * @return Module
-     */
-    public static function Decorator()
-    {
-        return parent::Decorator();
-    }
-
-    /**
      * @return Settings
      */
     public function getModuleSettings()
@@ -197,6 +189,11 @@ class Module extends \Aurora\System\Module\AbstractModule
         }
 
         if (\Aurora\System\Application::$mobileAppChecked) {
+            return false;
+        }
+
+        $sXClientHeader = (string) \MailSo\Base\Http::SingletonInstance()->GetHeader('X-Client');
+        if (strtolower($sXClientHeader) !== 'webclient') {
             return false;
         }
 
