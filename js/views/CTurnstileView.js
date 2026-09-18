@@ -6,7 +6,9 @@ var
 	ko = require('knockout'),
 	
 	App = require('%PathToCoreWebclientModule%/js/App.js'),
-	
+	Screens = require('%PathToCoreWebclientModule%/js/Screens.js'),
+	TextUtils = require('%PathToCoreWebclientModule%/js/utils/Text.js'),
+
 	Settings = require('modules/%ModuleName%/js/Settings.js')
 ;
 
@@ -37,6 +39,7 @@ function CTurnstileView(sModuleName)
 				}, this));
 			} else {
 				oData.Reject = true
+				Screens.showError(TextUtils.i18n('%MODULENAME%/ERROR_CLOUDFARE_TURNSTILE_VERIFICATION_DID_NOT_COMPLETE'))
 			}
 		}
 	}, this))
