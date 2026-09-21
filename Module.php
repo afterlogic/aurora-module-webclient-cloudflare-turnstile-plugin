@@ -119,7 +119,6 @@ class Module extends \Aurora\System\Module\AbstractModule
             'response' => $token
         ]);
         $response = curl_exec($ch);
-        curl_close($ch);
 
         return json_decode($response, true);
     }
