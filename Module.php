@@ -225,7 +225,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         if (!$this->oModuleSettings->SystemLogPath) {
             \Aurora\System\Api::Log($text);
         } else {
-            error_log(sprintf("[%s] - %s\n", date(\DateTimeInterface::RFC3339), $text), 3, $this->oModuleSettings->SystemLogPath);
+            \Aurora\System\Api::LogOnly(\Aurora\System\Logger::getLogLineHeader(self::GetName()) . ' ' . $text, $this->oModuleSettings->SystemLogPath);
         }
     }
 
