@@ -225,7 +225,7 @@ class Module extends \Aurora\System\Module\AbstractModule
         if (!$this->oModuleSettings->SystemLogPath) {
             \Aurora\System\Api::Log($text);
         } else {
-            \Aurora\System\Api::LogOnly(\Aurora\System\Logger::getLogLineHeader(self::GetName()) . ' ' . $text, $this->oModuleSettings->SystemLogPath);
+            \Aurora\System\Api::LogOnly(\Aurora\System\Logger::getLogLineHeader() . ' ' . $text, $this->oModuleSettings->SystemLogPath);
         }
     }
 
